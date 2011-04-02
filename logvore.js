@@ -1,4 +1,10 @@
+process.stdin.resume();
+process.stdin.setMaxListeners(256);
+
 require('http').createServer(function(request, response) {
+  var dataHandler = function(chunk) {
+    response.write(chunk);
+  };
   if (request.url !== '/tail') {
     response.writeHead(404);
     response.end();
@@ -8,12 +14,8 @@ require('http').createServer(function(request, response) {
     response.end();
   }
   response.writeHead(200, {'Content-Type': 'text/plain'});
-  process.stdin.on('data', function(chunk) {
-    process.stdout.write(chunk);
-    response.write(chunk);
+  process.stdin.on('data', dataHandler);
+  response.on('end', function() {
+    process.stdin.removeListener('data', dataHandler);
   });
-  process.stdin.on('end', function() {
-    response.end();
-  });
-  process.stdin.resume();
 }).listen(3000);
